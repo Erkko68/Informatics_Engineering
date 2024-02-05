@@ -1,0 +1,66 @@
+TECLAT EQU 0B000h
+ORIGEN 400h
+INICIO ini
+
+.CODIGO
+ini:
+	; Accés al buffer
+	
+	MOVH R0, BYTEALTO TECLAT		;R0 = B0 00
+	MOVL R0, BYTEBAJO TECLAT		;R0 => acces al buffer de teclat
+	
+	; Accés al Registre de control
+	
+	MOV R1,R0 						;R1 tindrà el registre de control
+	INC R1							;El registre de control esta just depues del buffer per tant +1
+	
+	; Inicialitzar el teclat
+	; RegControl = 00000000 00000100 => Activar els bit2
+	
+	MOVH R3, 00000000b
+	MOVL R3, 00000100b
+	MOV [R1],R3
+	
+	; Comprobar si existeix una entrada al buffer
+	; Necessitarem una mascara == 00000001 00000000
+	; Tindrem tecla si el RegControl == 00000001 00000000
+	
+	MOVH R4, 00000001b
+	MOVL R4, 00000000b
+	
+	no_tecla:
+		; Llegir registre de control
+		
+		MOV R5, [R1]
+		
+		; Anulem la part de gestió de RegControl
+		
+		MOVL R5, 00h
+		
+		; Comprovar si el RegControl == mascara
+		
+		COMP R5, R4
+		
+		; Si son iguals => ZERO				BRZ
+		; SSi son diferents => No ZERO		BRNZ
+	BRNZ no_tecla
+		
+		; llegir del buffer
+		
+		MOV R5,[R0]
+		; Comprobar si es la lletra 's'
+		
+		MOVH R6, 15h
+		MOVL R6, 73h
+		
+		COMP R6,R5
+		BRZ sortir
+		
+		JMP no_tecla
+		
+	sortir:
+	
+	JMP -1
+	
+
+FIN 

@@ -1,0 +1,147 @@
+TECLAT EQU 0B000h
+PANTALLA EQU 0A000h
+
+ORIGEN 400h
+INICIO ini
+.DATOS 
+	msg VALOR 0748h,074Fh,074Ch,0741h	;Afegim codi de color tambe
+	; Codi de color pantalla
+	; 				00 FFF LLL
+	; negre/blanc	00 000 111 => 07
+
+.CODIGO
+ini:
+	MOVL R0, BYTEBAJO TECLAT
+	MOVH R0, BYTEALTO TECLAT
+	
+	MOVL R1, BYTEBAJO PANTALLA
+	MOVH R1, BYTEALTO PANTALLA
+	
+	; Accedir registre de control
+	
+	MOV R2, R1
+	INC R2
+	
+	; Inicialitzar teclat (borrar buffer)
+	
+	MOVH R3, 00h
+	MOVL R3, 00000100b
+	MOV [R2], R3
+	
+	; Registre de control pantalla
+	; @Pantalla + 120
+	MOV R3, R1
+	MOVL R3, 78h	; 78h=120d
+	
+	; Inicialitzar la pantalla (borrar i activar)
+	
+	MOVH R4, 00h
+	MOVL R4, 00000000
+	MOV [R3], R4
+	
+	; Esperar tecla
+	
+	MOVH R3, 01h
+	MOVL R3, 00h
+	
+	no_tecla:
+		; Llegir Registre de Control
+		
+		MOV R4, [R2]
+		
+		; Anular part baixa
+		
+		MOVL R4, 00h
+		
+		; Comparar
+		COMP R3,R4
+		
+	BRNZ no_tecla	; Si son diferents tornar a no_tecla
+	
+	; Llegir tecla
+	
+	MOV R5, [R0]
+	
+	; Es 'S'?
+	
+	MOVH R6, 15h
+	MOVL R6, 53h		; R6 = 'S'
+	
+	COMP R6,R5
+	BRZ s_majus			; Anar a la zona on printarem en blanc i negre
+	
+	MOVL R6, 73h		; R6 = 'S'
+	
+	COMP R6,R5
+	BRZ s_minus			; Anar a la zona on printarem en groc i blanc
+	
+	JMP no_tecla
+	
+	
+	; Mostrar el missatge en groc/blanc
+	s_minus:
+		MOVL R4, BYTEBAJO DIRECCION msg
+		MOVH R4, BYTEALTO DIRECCION msg
+		
+		MOV R5, R1			; Copiem adreça base pantalla
+		MOVL R5, 23h		; Situem cursor sobre la pantalla
+		
+		; Iterador
+		
+		MOVH R6, 00h
+		MOVL R6, 04h	;Ncaracters en el missatge
+		
+		hola_min: ;Bucle per mostrar missatge
+			; Llegirem el caracter a mostrar
+			MOV R7,[R4]
+			; Canviar colors fons/lletra
+			MOVH R7, 18h
+			; escriure el caracter per pantalla (R5)
+			MOV [R5], R7
+			; Next caracter
+			INC R4
+			; Next pixel
+			INC R5
+			; Una lletra menos
+			DEC R6
+		BRNZ hola_min
+		
+	JMP sortir
+	
+	s_majus:
+		MOVL R4, BYTEBAJO DIRECCION msg
+		MOVH R4, BYTEALTO DIRECCION msg
+		
+		MOV R5, R1			; Copiem adreça base pantalla
+		MOVL R5, 23h		; Situem cursor sobre la pantalla
+		
+		; Iterador
+		
+		MOVH R6, 00h
+		MOVL R6, 04h	;Ncaracters en el missatge
+		
+		hola_maj: ;Bucle per mostrar missatge
+			; Llegirem el caracter a mostrar
+			MOV R7,[R4]
+			; escriure el caracter per pantalla (R5)
+			MOV [R5], R7
+			; Next caracter
+			INC R4
+			; Next pixel
+			INC R5
+			; Una lletra menos
+			DEC R6
+		BRNZ hola_maj
+		
+	JMP sortir
+		
+	
+	sortir:
+	JMP -1
+	
+	; R0 => @Teclat (buffer)
+	; R1 => @Pantalla 
+	; R2 => Registre control Teclat
+	; R3 => Mascara Teclat
+
+FIN 

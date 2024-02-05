@@ -1,0 +1,63 @@
+PANTALLA EQU 0B000h
+ORIGEN 400h
+INICIO ini
+.DATOS
+					; Paraula = HOLA (Part baixa)
+					; Color = 00 000 111 => NEGRE - BLANC => 07 (Part Alta)
+	paraula VALOR 	0748h, 074Fh, 074Ch, 0741h
+	
+.CODIGO
+ini:
+	MOVH R0, BYTEALTO PANTALLA
+	MOVL R0, BYTEBAJO PANTALLA
+
+		;activar i borrar pantalla
+		;registre de control  =  base +120
+		MOVH R1,00h
+		MOVL R1,120
+		ADD R1,R0,R1
+		
+		MOVH R2,00h
+		MOVL R2,03h		;00000011b
+		MOV [R1],R2
+		
+		; colocar cursor en pantalla
+		MOVH R3,00h
+		MOVL R3,35
+		ADD R1,R0,R3 	;R1 apunta a la posicio de  pantalla 35
+		; Carregar vector paraula
+		
+		MOVH R4, BYTEALTO DIRECCION paraula
+		MOVL R4, BYTEBAJO DIRECCION paraula
+		
+		; Inicialitzar el iterador de paraula
+		
+		MOVH R5,00h
+		MOVL R5,04h
+		
+		; mentre no acabi la parauka fer
+		
+		missatge:
+			; carregar la lletra
+			
+			MOV R6, [R4]
+			
+			; colorcar lletra al cursor
+			
+			MOV [R1],R6
+			
+			; incrementar cursor pantalla
+			
+			INC R1
+			
+			; nova lletra paraula
+			
+			INC R4
+			
+			; decrementar iterador
+			
+			DEC R5
+		BRNZ missatge
+		
+		JMP -1
+FIN 

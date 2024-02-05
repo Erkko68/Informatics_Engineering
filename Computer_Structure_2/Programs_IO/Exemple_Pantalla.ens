@@ -1,0 +1,88 @@
+PANTALLA EQU 0B000h		;Sempre ficar un 0 deavant per evitar que el compilador doni error.
+
+ORIGEN 400h
+
+INICIO ini
+
+.CODIGO
+	
+ini:
+	MOVL R0, BYTEBAJO PANTALLA		;Carregar direcció memoria pantalla
+	MOVH R0, BYTEALTO PANTALLA
+	
+	; activar pantalla i borrar la pantalla
+	; accedur al registre de control i afegir:
+	; activar pantalla: 00000000 00000010
+	; apagar pantalla: 00000000 00000000
+	; borrar pantalla: 00000000 00000001
+	
+	; El resgistre de control es situa  a la BASE + 120
+	;----------------------------------------------------------------
+	
+	MOVH R1,00h
+	MOVL R1, 120
+	ADD R1,R1,R0 ;R1 = BASE + 120 => resgitre de control
+	
+	MOVH R2, 00h
+	MOVL R2, 00000011b 	;MOVL R2,03h el tres es el mateix que el 11 en binari.
+	MOV [R1],R2 
+	
+	;-------------Fins ara borrat i activat pantalla----------------
+	
+	;escriure una lletra
+	; registre = 00FFFCCC LLLLLLL
+	; HIGH = 00 fons caràcter
+	; LOW = caràcter
+	
+	MOVH R2, 00000111b	; Fons negre, color blanc
+	MOVL R2, 48h 		; caràcter
+	
+	MOV [R0],R2 		;Escrivim en pantalla
+	
+	INC R0	;Incrementar següent posició de pantalla
+	
+	MOVH R2, 00000111b	; Fons negre, color blanc
+	MOVL R2, 4Fh 		; caràcter
+	
+	MOV [R0],R2 		;Escrivim en pantalla
+	
+	;-------------borrar i activar pantalla----------------
+	
+	MOVH R1,00h
+	MOVL R1, 120
+	ADD R1,R1,R0 ;R1 = BASE + 120 => resgitre de control
+	
+	MOVH R2, 00h
+	MOVL R2, 00000011b 	;MOVL R2,03h el tres es el mateix que el 11 en binari.
+	MOV [R1],R2 
+	
+	;-------------borrar i activar pantalla----------------
+	
+	;------------------------Escriure en posició específica de pantalla--------------------;
+	; Per seleccionar la posició en concret utilitzem la formula:
+	
+	; 						Posició = (fila-1)·15+columna
+	
+	; Desplaçarem el cursor pantalla fina la posició 35
+	
+	MOVH R3,00h
+	MOVL R3,35
+	
+	ADD R1,R0,R3
+	
+	; Color + Caracter
+	
+	MOVH R2, 00000111b	; Fons negre, color blanc
+	MOVL R2, 48h 		; caràcter
+	
+	MOV [R1],R2 		;Escrivim en pantalla
+	
+	INC R1	;Incrementar següent posició de pantalla
+	
+	MOVH R2, 00000111b	; Fons negre, color blanc
+	MOVL R2, 4Fh 		; caràcter
+	
+	MOV [R1],R2 		;Escrivim en pantalla
+	
+	JMP -1
+FIN

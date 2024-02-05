@@ -1,0 +1,134 @@
+;---------------------------------------;
+; Nom alumne 1: Èric Bitriá Ribes		;
+; Nom alumne 2: Arnau Inglada Frances 	;
+; DNI Alumne 1: 49755704B				;
+; DNI Alumne 2: 48053852K				;
+; Grup 4								;
+; Data: 14/04/2023						;
+; --------------------------------------;
+
+
+ORIGEN 400h
+
+INICIO ini
+
+.DATOS
+
+operand1 VALOR 0002h,0003h,0004h,0003h,0002h
+operand2 VALOR 5 VECES 04h
+resultat VALOR 5 VECES 01h
+
+.CODIGO
+
+ini:
+	;Carreguem la direcció de la posició del operand1
+	
+	MOVL R1, BYTEBAJO DIRECCION operand1
+	MOVH R1, BYTEALTO DIRECCION operand1
+	
+	;Carreguem la direcció de la posició del operand2
+	
+	MOVL R2, BYTEBAJO DIRECCION operand2
+	MOVH R2, BYTEALTO DIRECCION operand2
+	
+	;Carreguem la direcció de la posició del resultat
+	
+	MOVL R0, BYTEBAJO DIRECCION resultat
+	MOVH R0, BYTEALTO DIRECCION resultat
+	
+	;Inicialitzar nombre de repeticions del bucle a R3, en funció del nombre d'elements dels arrays.
+	
+	MOVL R3,05h
+	MOVH R3,00h
+	
+	;Registres R0,R1,R2,R3 OCUPATS
+	
+	bucle_array:
+	
+		XOR R7,R7,R7
+		
+		MOV R4,[R1] 	;Carregar valor de la direcció
+		
+		MOVL R5,02h			;Carregar valor de C
+		MOVH R5,00h
+		
+		ADD R4,R4,R5		; R4 = Op1+C
+		
+		MOV R7,R4		; R7 = Op1+C
+		
+		MOV R6,[R2]		;Carregar índex de la potència amb el Op2
+		DEC R6			;Decrementar en 1 el índex de la potència
+		
+		bucle_potencia:
+		
+			XOR R5,R5,R5	;Vuidar registre pel resultat, R5=0000h
+			
+			multiplica_potencia:
+				ADD R5,R5,R7
+				DEC R4
+			BRNZ multiplica_potencia
+			
+			MOV R7,R5
+			
+			;--------------Tornar a carregar R4 (Op1+C)-----------;
+			MOV R4,[R1] 	;Carregar valor de la direcció
+			MOVL R5,02h			;Carregar valor de C
+			MOVH R5,00h
+			;-----------------------------------------------------;
+			
+			ADD R4,R4,R5		; R4 = Op1+C
+			
+			DEC R6							;Decrementar índex la potència (Nombre de vegades que es realitzará el bucle)
+		BRNZ bucle_potencia
+		
+		;Resultat emmagatzemat en R7 ((Op1+C)^Op2)
+		
+		;Carregar B
+		
+		MOVL R4,19h
+		MOVH R4,00h
+		
+		SUB R7,R7,R4
+		;A R7 tenim resultat actual: ((Op1+C)^Op2)+B
+		
+		;Carregar A
+		
+		MOVL R4,02h
+		MOVH R4,00h
+		
+		
+		;Inicialitzar on guardar resultat a R5
+		
+		XOR R5,R5,R5
+		
+		multiplica_a:
+			ADD R5,R5,R7
+			DEC R4
+		BRNZ multiplica_a
+		
+		;Actualment tenim guardat a R5 A·(((Op1+C)^Op2)+B)
+		
+		;Carregar D
+		
+		MOVL R4,02h
+		MOVH R4,00h
+		
+		;Sumar a R5 el valor D que está dins de R4
+		
+		ADD R5,R5,R4
+		
+		;A R5 tenim el resultat final:  A·(((Op1+C)^Op2)+B)+D
+		
+		MOV [R0],R5			;Guardar resultat final a la posició corresponent
+		
+		INC R0				;Incrementar a la següent posició dels arrays
+		INC R1
+		INC R2
+		
+		DEC R3				;Decrementar índex per recòrrer posicions del array
+		
+	BRNZ bucle_array
+	
+	JMP -1
+	
+FIN 

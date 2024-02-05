@@ -1,0 +1,32 @@
+ORIGEN 200h
+INICIO ini
+
+.DATOS
+	var1 valor 01h
+	var3 valor 03h
+	res valor 00h
+
+
+.CODIGO 
+	ini:
+	;per moure un valor dins d'una adreça utiliitzem el BYTEALTO/BAJO DIRECCION i el valor de la direccio de la adreça
+
+	MOVL R0, BYTEBAJO DIRECCION var1	; R0 = @VAR1 => @VAR1=0200h => R0= ?? 00h
+	MOVH R0, BYTEALTO DIRECCION var1	; R0 = @VAR1 => @VAR1=0200h => R0= 02 00h
+
+	MOVL R1, BYTEBAJO DIRECCION var3	; R1 = @VAR1 => @VAR1=0200h => R0= ?? 01h
+	MOVH R1, BYTEALTO DIRECCION var3	; R1 = @VAR1 => @VAR1=0200h => R0= 02 00h
+	
+	MOV R3, [R0] ;a R3 es ficara el valor de [R0] = [200h] = 01h
+	MOV R4, [R1] ;a R4 es ficara el valor de [R1] = [201h] = 03h
+	
+	ADD R5,R3,R4 ; R5=R3+R4
+	
+	MOVL R2, BYTEBAJO DIRECCION res ;R2= ?? 02h
+	MOVH R2, BYTEALTO DIRECCION res  ;R2= 02 02h
+	
+	MOV [R2], R5 ; A memoria [R2]=R5 => [202h]=R5=4
+	
+	JMP -1
+
+FIN 

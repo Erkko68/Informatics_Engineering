@@ -1,0 +1,45 @@
+num EQU 01h
+exp EQU 03h
+
+ORIGEN 200h
+
+INICIO ini
+
+.CODIGO
+	ini:
+	
+	MOVL R1, num
+	MOVH R1, 00h
+	
+	MOVL R2, exp
+	MOVH R2, 00h
+	
+	MOV R3,R1
+	
+	cond:			;Decrementar R2 per fer les potencies
+		DEC R2		;Control que el exponent no sigui 1
+	BRZ end
+
+
+	potencia:
+		
+		XOR R0,R0,R0		;Inicialitzar el registre del resultat
+		multiplica:
+			ADD R0, R0, R3
+			DEC R1
+		BRNZ multiplica
+
+		MOV R3,R0			;Actualitzar valor a sumar
+		
+		MOVL R1, num		;reiniciar contador
+		MOVH R1, 00h
+		
+		DEC R2
+	BRNZ potencia
+	; resultat emmagatzemat a R3 i R0
+	end:
+
+	JMP -1
+	
+	
+FIN

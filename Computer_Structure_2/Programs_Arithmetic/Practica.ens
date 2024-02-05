@@ -1,0 +1,104 @@
+;-----------------------------------;
+; Nom alumne 1: Èric Bitriá Ribes	;
+; Grup 1							;
+; Data: 24/03/2023					;
+; ----------------------------------;
+
+A EQU 04h
+B EQU 03h
+C EQU 02h
+D EQU 05h
+
+ORIGEN 400h
+
+INICIO ini
+
+.DATOS
+
+	op1 VALOR 0003h,0002h,0002h,0002h,0003h		
+	op2 VALOR 0001h,0002h,0003h,0002h,0001h		
+	res VALOR 5 VECES 0001h 					
+	
+.CODIGO
+	ini:
+		MOVL R3, 05h
+		MOVH R3, 00h
+		
+		MOVL R1, BYTEBAJO DIRECCION op1	;Inicialitzar direcció del array 1
+		MOVH R1, BYTEALTO DIRECCION op1
+	
+		MOVL R2, BYTEBAJO DIRECCION op2	;Inicialitzar direcció del array 2
+		MOVH R2, BYTEALTO DIRECCION op2
+	
+		MOVL R0, BYTEBAJO DIRECCION res	;Inicialitzar direcció del array 2
+		MOVH R0, BYTEALTO DIRECCION res
+	
+		array:
+			MOV R6,[R2]
+			MOVL R5, B
+			MOVH R5, 00h
+			MOVL R4, 00h
+			MOVH R4, 00h
+			
+			mult_B:				;B*op2[i]
+				ADD R4,R4,R6
+				DEC R5
+			BRNZ mult_B
+			
+			;R4 = B*op2[i]
+			DEC R4 				;Decrementar en 1 per fer el bucle de la potencia
+			
+			MOV R5,[R1]
+			MOV R7,[R1]
+			
+			pot:
+				XOR R6,R6,R6
+				mult_pot:
+					ADD R6,R6,R7
+					DEC R5
+				BRNZ mult_pot
+				
+				MOV R7,R6
+				MOV R5,[R1]
+				
+				DEC R4
+			BRNZ pot
+			
+			;R7 i R6 tenen op1[i]^(B*op2[i])
+			
+			MOVL R4,C
+			MOVH R4,00h
+			
+			SUB R4,R6,R4
+			
+			;R4 te (op1[i]^(B*op2[i]))+C
+			
+			XOR R5,R5,R5 	;Buidem R5
+			
+			MOVL R6, A		;Carreguem A a R6
+			MOVH R6, 00h
+			
+			mult_A:
+				ADD R5,R5,R4
+				DEC R6
+			BRNZ mult_A
+			
+			;A*((op1[i]^(B*op2[i]))+C)
+			
+			MOVL R4, D
+			MOVH R4, 00h
+			
+			XOR R6,R6,R6
+			
+			ADD R6,R5,R4					;sumar D
+			
+			MOV [R0],R6
+
+			INC R1							;Saltar a la següent posició del array
+			INC R2
+			INC R0
+			DEC R3							;decrementar el index del bucle
+		BRNZ array
+	JMP -1
+	
+FIN 

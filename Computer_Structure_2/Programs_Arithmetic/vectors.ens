@@ -1,0 +1,45 @@
+;Creació i manipulació d'arrays o vectors
+ORIGEN 200h
+INICIO ini
+
+.DATOS
+	;inicialització arrays
+	op1 VALOR 0001h,0002h,0003h,0004h,0005h		;OP1 = [1,2,3,4,5]
+	op2 VALOR 5 VECES 00005h					;OP2 = [5,5,5,5,5]
+	res VALOR 5 VECES 0000h 					;RES = [0,0,0,0,0]
+.CODIGO
+	ini:
+	MOVL R1, BYTEBAJO DIRECCION op1
+	MOVH R1, BYTEALTO DIRECCION op1
+	
+	MOVL R2, BYTEBAJO DIRECCION op2
+	MOVH R2, BYTEALTO DIRECCION op2
+	
+	MOVL R0, BYTEBAJO DIRECCION res
+	MOVH R0, BYTEALTO DIRECCION res
+	
+	MOVL R3, 05h ;En cas que fiquem un valor de menys que la llargada del array el resultat seria 0, i si ens passem sobrescriuriam la següent operacio trancant el programa.
+	MOVH R3, 00h
+	
+	bucle_suma:
+	
+		;llegir op1
+		MOV R4, [R1]
+		;llegir op2
+		MOV R5, [R2]
+		;suma
+		ADD R6,R4,R5
+		;desar suma a res
+		MOV [R0],R6
+		;saltar al següent incrementant en "1" la posició de memoria
+		INC R1
+		INC R2
+		INC R0
+		
+		DEC R3
+	BRNZ bucle_suma
+	
+	JMP -1
+	
+FIN
+	

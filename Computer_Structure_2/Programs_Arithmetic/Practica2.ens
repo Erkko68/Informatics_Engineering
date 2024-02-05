@@ -1,0 +1,75 @@
+A EQU 02h
+B EQU 03h
+
+ORIGEN 400h
+
+INICIO ini
+
+.DATOS
+
+operand1 VALOR 0001h,0002h,0003h,0004h,0005h
+operand2 VALOR 5 VECES 0005h
+resu VALOR 5 VECES 0001h
+
+.CODIGO
+
+ini:
+	
+	MOVL R1, BYTEBAJO DIRECCION operand1
+	MOVH R1, BYTEALTO DIRECCION operand1
+	
+	MOVL R2, BYTEBAJO DIRECCION operand2
+	MOVH R2, BYTEALTO DIRECCION operand2
+	
+	MOVL R0, BYTEBAJO DIRECCION resu
+	MOVH R0, BYTEALTO DIRECCION resu
+	
+	MOVL R3,05h
+	MOVH R3,00h
+
+	bucle_array:
+	
+		MOVL R4,A
+		MOVH R4,00h
+		
+		XOR R5,R5,R5
+		
+		MOV R6,[R1]
+		
+		mult_a_1:
+			ADD R5,R5,R6
+			DEC R4
+		BRNZ mult_a_1
+		
+		MOV R6,[R2]
+	
+		ADD R5,R5,R6
+		
+		MOVL R4,A
+		MOVH R4,00h
+		
+		XOR R6,R6,R6
+		
+		mult_a_2:
+			ADD R6,R6,R5
+			DEC R4
+		BRNZ mult_a_2
+		
+		MOVL R5,B
+		MOVH R5,00h
+		
+		XOR R4,R4,R4
+		
+		SUB R4,R6,R5
+		
+		MOV [R0],R4
+		
+		INC R1
+		INC R2
+		INC R0
+		DEC R3
+	BRNZ bucle_array
+	
+	JMP -1
+	
+FIN

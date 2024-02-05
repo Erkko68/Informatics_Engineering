@@ -1,0 +1,33 @@
+const1 EQU 14h	;definició constant
+const2 EQU 03h	;definició constant
+
+ORIGEN 200h
+
+INICIO ini
+
+.CODIGO
+	ini:
+	
+	;asegurar-nos que esta inicialitzat a 0
+	;Mètode 1:
+	MOVL R0, 00h 
+	MOVH R0, 00h
+	;Mètode 2: com que els dos son iguals guaradara un 0 a R0
+	XOR R0,R0,R0
+	
+	
+	MOVL R1, const1
+	MOVH R1, 00h
+	
+	MOVL R2, const2
+	MOVH R2, 00h
+	
+	multiplica:
+		ADD R0, R0, R1
+		DEC R2 ; R2=R2-1 => Al arribar a 0 retornara una flag = 0
+		BRNZ multiplica ; si no es zero salta, (BRanch No Zero) FA CAS DE LA ÚLTIMA INSTRUCCIÓ EXECUTADA EN AQUEST CAS DEC
+						; BRZ salta quan sigui zero
+	
+	JMP -1
+	
+FIN

@@ -1,0 +1,234 @@
+TECLAT EQU 0A000h
+PANTALLA EQU 0B000h
+
+ORIGEN 500h
+INICIO ini
+.DATOS
+	bears VALOR 2362h, 0C65h, 1461h, 0D72h, 1553h ;"b","e" a "r" "S"com entrarà per teclat
+	castle VALOR 0743h, 0741h, 0753h, 0754h, 074Ch, 0745h; "C","A", "S" , "T" , "L" , "E" amb fons blanc i lletra negra 
+	be VALOR 1720h, 1720h, 1720h, 1720h, 1720h, 1742h ;
+	mal VALOR 2720h, 2720h, 2720h, 2720h, 2720h, 2745h; E amb fons vermell i lletra negra (20h) 
+	theend VALOR 1754h, 1748h, 1745h, 1745h, 174Eh, 1744h; THE END
+	usuari VALOR 5 VECES 0000h
+.CODIGO
+ini:
+	MOVL R0, BYTEBAJO TECLAT
+	MOVH R0, BYTEALTO TECLAT; R0=A000h
+
+	MOVL R1, BYTEBAJO PANTALLA
+	MOVH R1, BYTEALTO PANTALLA; R1=B000h
+
+;Esborrar tots els caràcters del buffer de teclat
+	MOV R2,R0
+	INC R2; R2=A001h CONTROL DEL TECLAT
+	
+	MOVH R3,00h
+	MOVL R3,00000100b; R3=0004h ordre de esborrar tots els caràcters del teclat
+
+	MOV [R2],R3
+	
+;Esborrar pantalla
+	MOV R3,R1; R3=B000h
+	MOVL R3,78h; R3=B078h=B000h+120d
+
+	MOVH R4,00h
+	MOVL R4,00000011b; R4=03h ordre d'engegar i esborrar lo que hi hagi a la pantalla
+
+	MOV [R3],R4
+
+;RO TECLAT, R1 PANTALLA, R2 CONTROL TECLAT, R3 CONTROL PANTALLA, R4 "LLIURE" , R5,R6 I R7 LLIURES
+	MOVL R3,5Bh; B000h+16d=B010h R3 PUNTER PANTALLA
+	MOVL R4,06h; R4 ITERADOR BUCLE ESCRIURE CASTLE
+	MOVH R4,00h; 
+	MOVH R5, BYTEALTO DIRECCION castle
+	MOVL R5, BYTEBAJO DIRECCION castle; R5 és l'adreça on es troba "C"
+	
+	es_castle:
+		MOV R6,[R5]
+		MOV [R3],R6
+		INC R5; SEGUENT CARACTER
+		INC R3; SEGUENT POSICIO
+		DEC R4
+		BRNZ es_castle
+
+;RO TECLAT, R1 usuari, R2 CONTROL TECLAT, R3 POSICIÓ PANTALLA, R4 0005 ITERADOR PER AGAFAR bears , R5 CONTINGUT BUFFER TECLAT,R6 HI HA TECLA? I R7 LLIURES
+	MOVL R3,12h; B000h + 18d = B012h R3 PUNTER PANTALLA 
+	MOVL R4,05h; NECESSITO 5 CARACTERS	
+
+	MOVL R1, BYTEBAJO DIRECCION usuari
+	MOVH R1, BYTEALTO DIRECCION usuari; 
+		
+
+;Esperar tecla al buffer de teclat
+	MOVL R6,00h
+	MOVH R6,01h
+	
+	MOVL R7,0Fh ; Inicialitzo R7 per tal de fer els salts necessaris per crear les columnes de text
+	MOVH R7,00h
+		
+	cinc_lletres:
+		no_tecla:
+			MOV R5,[R2]
+			MOVL R5,00h; 	
+			COMP R5,R6; SI R5 VAL 0100 HI HA TECLA, SI VAL 0000 NO HI HA TECLA
+				  ;si COMP R5,R6= 0 vol dir que R5=R6, else R5!=R6 
+			BRNZ no_tecla
+		;tinc tecla al buffer-> emmagatzemar-la i imprimir-la per pantalla
+		MOV R5,[R0]
+		MOV [R1],R5
+		MOVH R5,3Ch; al R5 hi ha la tecla que s'ha pitjat, pero abans de treure-la per pantalla li poso el format que vull (fons blanc lletra vermella= 3Ch)
+		MOV [R3],R5;IMPRIMIR PER PANTALLA
+		
+		INC R1
+		ADD R3, R3,R7
+		DEC R4
+		BRNZ cinc_lletres
+	
+;R3=POSICIO PANTALLA, R1 USUARI, R0,R2,R4=0000h,R5,R6 I R7 LLIURES	
+
+;COMPARAR EL MISSATGE EMMAGATZEMAT I EL MISSATGE DE L'USUARI
+	MOVL R1, BYTEBAJO DIRECCION usuari
+	MOVH R1, BYTEALTO DIRECCION usuari
+
+	MOVL R0, BYTEBAJO DIRECCION bears
+	MOVH R0, BYTEALTO DIRECCION bears
+	
+	MOVH R2, BYTEALTO DIRECCION be
+	MOVL R2, BYTEBAJO DIRECCION be
+	
+	MOVH R3, BYTEALTO DIRECCION mal
+	MOVL R3, BYTEBAJO DIRECCION mal
+	
+	MOVH R7, 00h
+	MOVL R7, 05h
+	
+	MOVH R6, 00h
+	MOVL R6, 01h
+	
+	com_bears:
+		MOV R4,[R1];R2 LLETRA PITJADA PER L'USUARI
+		MOV R5,[R0];R5 LLETRA CORRESPONENT A bears
+
+		COMP R4,R5
+		BRNZ incorrecte
+		
+		MOVH R4,17h	;Codi de X
+		MOVL R4,58h	;Codi de X
+		MOV [R2],R4
+		INC R3
+		INC R2
+		INC R1
+		INC R0
+		DEC R7
+		BRNZ com_bears
+		JMP print
+
+	incorrecte:
+		MOVH R4,27h	;Codi de X
+		MOVL R4,58h	;Codi de X
+		MOV [R3],R4
+		INC R3
+		INC R2
+		INC R1
+		INC R0
+		MOVL R6, 00h
+		DEC R7
+		BRNZ com_bears
+	
+	
+	print:
+		MOVL R4,06h
+		MOVH R4,00h
+		MOVH R0, BYTEALTO DIRECCION be
+		MOVL R0, BYTEBAJO DIRECCION be
+		
+		MOVH R1, BYTEALTO PANTALLA
+		MOVL R1, BYTEBAJO PANTALLA
+		
+		MOVL R2,0Fh
+		MOVH R2,00h
+		
+		MOVL R1, 1Ch
+		
+		es_be:
+			MOV R3,[R0]
+			MOV [R1], R3
+			ADD R1,R1,R2
+			INC R0; SEGUENT CARACTER
+			DEC R4
+			BRNZ es_be
+		
+		MOVL R4,06h
+		MOVH R4,00h
+		MOVH R0, BYTEALTO DIRECCION mal
+		MOVL R0, BYTEBAJO DIRECCION mal
+		
+		MOVH R1, BYTEALTO PANTALLA
+		MOVL R1, BYTEBAJO PANTALLA
+		
+		MOVL R2,0Fh
+		MOVH R2,00h
+		
+		MOVL R1, 1Bh
+		
+		es_mal:
+			MOV R3,[R0]
+			MOV [R1],R3
+			ADD R1,R1,R2
+			INC R0; SEGUENT CARACTER
+			DEC R4
+			BRNZ es_mal
+				
+			
+	
+		MOVL R4,03h
+		MOVH R4,00h
+		MOVH R0, BYTEALTO DIRECCION theend
+		MOVL R0, BYTEBAJO DIRECCION theend
+		
+		MOVH R1, BYTEALTO PANTALLA
+		MOVL R1, BYTEBAJO PANTALLA
+		
+		MOVL R1, 16h ;POSICIO PRIMERA LLETRA
+		
+		es_the:
+		
+			MOV R3,[R0]
+			
+			
+			
+			MOV [R1],R3
+			INC R1
+			INC R0; SEGUENT CARACTER
+			DEC R4
+			BRNZ es_the
+		
+		MOVL R4,03h
+		MOVH R4,00h
+		MOVH R0, BYTEALTO DIRECCION theend
+		MOVL R0, BYTEBAJO DIRECCION theend
+		
+		MOVH R1, BYTEALTO PANTALLA
+		MOVL R1, BYTEBAJO PANTALLA
+		
+		MOVL R1, 34h ;POSICIO PRIMERA LLETRA
+		ADD R0,R4,R0
+		
+		es_end:
+		
+			MOV R3,[R0]
+			MOV [R1],R3
+			INC R1
+			INC R0; SEGUENT CARACTER
+			DEC R4
+			BRNZ es_end
+		
+		
+		
+		
+	JMP -1
+FIN
+	
+
+	
+

@@ -1,0 +1,29 @@
+OK(0): Book with tittle: "100 años de soledad" added with id: 0.
+OK(1): Book with tittle: "100 años de soledad" added with id: 1.
+OK(2): Book with tittle: "100 años de soledad" added with id: 2.
+OK(3): Book with tittle: "El Hobbit" added with id: 3.
+OK(4): Book with tittle: "Eragon" added with id: 4.
+OK(5): Book with tittle: "Barbie y su mansion" added with id: 5.
+OK(6): Member with the name "Eric Bitria" and address "C/Alzina" added successfully with Id: 0
+ERROR(7): Member already exists.
+OK(8): Member with the name "Pepe el xocolatero d" and address "Costa Rica C/Amanacer de la As" added successfully with Id: 1
+ERROR(9): Member already exists.
+OK(10): Member with the name "Jaime Castañas" and address "New York" added successfully with Id: 2
+OK(11): Member with the name "Jaime Castañas" and address "Londres" added successfully with Id: 3
+OK(12): Book with tittle: "100 años de soledad" lent successfully to member with id 0
+OK(13): Book with tittle: "100 años de soledad" lent successfully to member with id 0
+OK(14): Book with tittle: "100 años de soledad" lent successfully to member with id 0
+ERROR(15): Book already lent to member with id: 0
+ERROR(16): Member with id: 0 can't borrow more books.
+OK(17): Book with tittle: "El Hobbit" lent successfully to member with id 1
+ERROR(18): Book already lent to member with id: 1
+ERROR(19): The book doesn't exists.
+ERROR(20): The member doesn't exists.
+ERROR(21): The book doesn't exists.
+ERROR(22): The book doesn't exists.
+OK(23): Book with tittle: "100 años de soledad" and id: 0, returned successfully from member with id: 0
+ERROR(24): The book is not lent.
+OK(25): Book with tittle: "100 años de soledad" and id: 1, returned successfully from member with id: 0
+OK(26): Book with tittle: "100 años de soledad" and id: 2, returned successfully from member with id: 0
+ERROR(27): The book doesn't exists.
+OK(28): Book with tittle: "100 años de soledad" lent successfully to member with id 0

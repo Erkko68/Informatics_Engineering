@@ -1,0 +1,49 @@
+ORIGEN 200h
+
+INICIO ini
+.DATOS
+	num VALOR 03h	;@addr 200
+	exp VALOR 04h	;@addr 201
+	resu VALOR 00h	;@addr 202
+.CODIGO
+	ini:
+	
+	MOVL R4, BYTEBAJO DIRECCION num
+	MOVH R4, BYTEALTO DIRECCION num
+	
+	MOV R1,[R4]
+	
+	MOVL R2, BYTEBAJO DIRECCION exp
+	MOVH R2, BYTEALTO DIRECCION exp
+	
+	MOV R2,[R2]
+	
+	MOV R3,R1	;Necessitem fer copia per multiplicacio i iterador
+	
+	DEC R2		;decrement per fer la potencia
+
+	potencia:
+		
+		XOR R0,R0,R0		;Inicialitzar el registre del resultat
+		multiplica:
+			ADD R0, R0, R3
+			DEC R1
+		BRNZ multiplica
+
+		MOV R3,R0			;Actualitzar valor a sumar
+		
+		MOV R1,[R4]			;Reiniciar contador des d'on tenim la base guardada
+		
+		DEC R2
+	BRNZ potencia
+	; resultat emmagatzemat a R3 i R0
+	
+	MOVL R4, BYTEBAJO DIRECCION resu		;inicialitzar direcció de memoria del R4 cap al valor resu
+	MOVH R4, BYTEALTO DIRECCION resu
+	
+	MOV [R4],R0
+
+	JMP -1
+	
+	
+FIN

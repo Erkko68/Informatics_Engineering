@@ -1,0 +1,379 @@
+PANTALLA EQU 0A000h
+TECLAT EQU 0B000h
+
+ORIGEN 400h
+INICIO ini
+.DATOS 
+	; Missatge inicial amb el codi de color afegit
+	msg VALOR 074Dh,0749h,0753h,0753h,0741h,0754h,0747h,0745h
+	
+	; Missatges finals amb el codi de color afegit
+	msg_end VALOR 0746h,0749h,074Eh,0741h,074Ch
+	msg_end_bad VALOR 0747h,0741h,0759h
+	
+	; Missatge d'error: ERROR
+	msg_error VALOR 0745h,0752h,0752h,074Fh,0752h
+	
+	; Paraula secreta escrita al revés (Explicació del perqué a la comprobació de la paraula secreta)
+	; PASS
+	pass VALOR 0053h,0053h,0041h,0050h
+	
+	; Codi de color pantalla
+	; 				00 FFF LLL
+	; negre/blanc	00 000 111 => 07
+
+.CODIGO
+
+ini:
+	
+	; ------------Setup---------------
+		MOVL R0, BYTEBAJO TECLAT
+		MOVH R0, BYTEALTO TECLAT
+	
+		MOVL R1, BYTEBAJO PANTALLA
+		MOVH R1, BYTEALTO PANTALLA
+	
+		; Accedir registre de control
+	
+		INC R0
+	
+		; Inicialitzar teclat (borrar buffer)
+	
+		MOVH R2, 00000000b
+		MOVL R2, 00000100b
+		MOV [R0], R2
+	
+		; Registre de control pantalla
+		; @Pantalla + 120
+	
+		MOVH R2, 00h
+		MOVL R2, 78h	; 78h=120d
+		ADD R2,R1,R2
+	
+		; Inicialitzar la pantalla (borrar i activar)
+	
+		MOVH R3, 00h
+		MOVL R3, 03h
+		MOV [R2], R3
+	; ------------ Setup END -------------
+	
+	; ----------- Mostrar missatge inicial ----------
+
+		; Colocar cursor
+			; Posició desitjada
+			MOVH R3,00h
+			MOVL R3,31
+			; Apliquem posició a registre de la pantalla
+			ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+			
+		; Creem iterador de la llargada del missatge:
+			MOVH R3,00h
+			MOVL R3,08h
+		
+		; Carregar direcció missatge
+			MOVH R4, BYTEALTO DIRECCION msg
+			MOVL R4, BYTEBAJO DIRECCION msg
+			
+		; Mostrar missatge
+			missatge_inicial:
+				; Carregar lletra
+				MOV R5,[R4]
+				; Dibuixar lletra
+				MOV [R1],R5
+				; Incremenetar posició de pantalla i següent lletra:
+				INC R1
+				INC R4
+				; Decrementar Iterador
+				DEC R3
+			BRNZ missatge_inicial
+			
+	; --------------- Mostrar missatge inicial end ---------------
+	
+	; Definir nombre d'intents
+	
+	MOVH R7,00h
+	MOVL R7,03h
+	
+	; -------------- Captura de input (clau del usuari) amb verificació incluida ------------------
+	input:
+		; Recarregar adreça inicial de pantalla
+		MOVL R1, BYTEBAJO PANTALLA
+		MOVH R1, BYTEALTO PANTALLA
+		
+		; Seleccionar nova posició de pantalla
+		
+		MOVH R3,00h
+		MOVL R3,49
+		ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+		
+		; Seleccionar Llargada de la contrasenya
+		
+		MOVH R5,00h
+		MOVL R5,04h
+		
+		; Registre de control per determinar validesa de la contrasenya 1: Vàlida, 0: No vàlida
+		
+		MOVH R6,00h
+		MOVL R6,01h
+		
+		password:
+			; Buidar buffer
+			MOVH R2, 01h
+			MOVL R2, 00h
+		
+			; Bucle detectant les lletres
+			no_tecla:
+				; Llegir Registre de Control
+				MOV R3, [R0]
+				; Anular part baixa
+				MOVL R3, 00h
+				; Comparar
+				COMP R2,R3
+				BRNZ no_tecla	; Si son iguals tornar a no_tecla
+	
+			; Escriure input en pantalla
+				; Agafar lletra del buffer
+				; Decrementem la posició de R0 per accedir al buffer i despres retornar al valor inicial
+				DEC R0
+				MOV R4,[R0]	
+				INC R0
+				
+				; Afegir format
+				MOVH R4,07h
+				
+				;Escriure en pantalla
+				MOV [R1],R4
+				
+			; ------- Comprobar si la paraula es vàlida ------
+				; Carregar direcció inicial de la lletra
+				
+				MOVH R3, BYTEALTO DIRECCION pass
+				MOVL R3, BYTEBAJO DIRECCION pass
+				
+				; Utilitzem la paraula secreta escrita al revés així podem sumar el valor del registre R5 que anirà variant cada vegada
+				; que es realitza el bucle, d'aquesta manera no requerim d'un altre registre per seleccionar la posició de la paraula secreta.
+				
+				ADD R3,R3,R5
+				DEC R3
+				
+				; Com que cada vegada que executem el bucle carregarem la posició podem sobreescriure
+				; el R3 que conté la direcció de la paraula amb la paraula
+				
+				MOV R3,[R3]
+				
+				; Anulem part alta de la lletra escrita per l'usuari
+				
+				MOVH R4,00h
+				
+				; Comparem la lletra escrita amb la de la contrasenya
+				
+				COMP R3,R4
+				
+				; En cas de que la lletra no correspongui amb la de la paraula secreta atribuirem a R6 0000h 
+				; valor que representarà paraula incorrecta i que es mantindrà al llarg de tota l'execució del intent
+				; En cas contrari l'ignorarà el BRZ
+				
+				BRZ correcte
+				
+					MOVH R6,00h
+					MOVL R6,00h
+					
+				correcte:
+			; ------------ Fi comprobació paraula correcte ------------- 
+			
+			;Incrementar posició de pantalla verticalment
+			
+			MOVH R4,00h
+			MOVL R4,15
+			ADD R1,R1,R4
+			
+		;Decrementar index de la llargada de la paraula secreta
+		DEC R5
+		BRNZ password
+		; ---------------- Input END ---------------
+		
+		; Ara tenim a R6 la validesa de la paraula del usuari
+		
+		; Si la paraula es correcta R6 tindrà valor 0000h després de fer el DEC R6 i saltarà al final
+		; Sino continuarà per fer més intents
+		DEC R6
+		BRZ final_correcte
+		
+		; -------------------- Retry ---------------------------
+		retry:
+			; ----------- Mostrar missatge d'error ----------
+			
+			; Recarregar adreça inicial de pantalla
+			MOVL R1, BYTEBAJO PANTALLA
+			MOVH R1, BYTEALTO PANTALLA
+			
+			; Colocar cursor
+				; Posició desitjada
+				MOVH R3,00h
+				MOVL R3,43
+				; Apliquem posició a registre de la pantalla
+				ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+			
+			; Creem iterador de la llargada del missatge:
+				MOVH R3,00h
+				MOVL R3,05h
+		
+			; Carregar direcció missatge
+				MOVH R4, BYTEALTO DIRECCION msg_error
+				MOVL R4, BYTEBAJO DIRECCION msg_error
+				
+			; Carregar valor de canviar de fila
+				MOVH R6,00h
+				MOVL R6,15
+				
+			; Mostrar missatge
+				missatge_error:
+					; Carregar lletra
+					MOV R5,[R4]
+					; Dibuixar lletra
+					MOV [R1],R5
+					; Incremenetar posició de pantalla i següent lletra:
+					ADD R1,R1,R6
+					INC R4
+					; Decrementar Iterador
+					DEC R3
+				BRNZ missatge_error
+			
+			; --------------- Mostrar missatge d'error end ---------------
+			
+			; ----------- Borrar input ----------
+			
+			; Recarregar adreça inicial de pantalla
+			MOVL R1, BYTEBAJO PANTALLA
+			MOVH R1, BYTEALTO PANTALLA
+			
+			; Colocar cursor
+				; Posició desitjada
+				MOVH R3,00h
+				MOVL R3,49
+				
+				; Apliquem posició a registre de la pantalla
+				ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+			
+			; Creem iterador de la llargada del missatge:
+				MOVH R3,00h
+				MOVL R3,04h
+		
+			; Carregar caràcter vuit
+				MOVH R4, 00h
+				MOVL R4, 20h
+				
+			; Carregar valor de canviar de fila
+				MOVH R6,00h
+				MOVL R6,15
+	
+			; Borrar missatge
+				borrar:
+					; Carregar lletra
+					MOV R5,R4
+					; Dibuixar lletra
+					MOV [R1],R5
+					; Incremenetar posició de pantalla
+					ADD R1,R1,R6
+					; Decrementar Iterador
+					DEC R3
+				BRNZ borrar
+			
+			; --------------- Borrar input END ---------------
+			
+		; Decrementar intents i saltar a final_bad si ha gastat tots els intents
+		DEC R7
+		BRZ final_bad
+			
+		JMP input
+		; ------------------ Retry END ----------------------
+		
+		
+		
+		; -------------------- Final Correct --------------------------
+		final_correcte:
+		; Mostrar missatge final
+		
+		; Recarregar adreça inicial de pantalla
+		MOVL R1, BYTEBAJO PANTALLA
+		MOVH R1, BYTEALTO PANTALLA
+		
+		; Colocar cursor
+			; Posició desitjada
+			MOVH R3,00h
+			MOVL R3,43h
+			; Apliquem posició a registre de la pantalla
+			ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+			
+		; Creem iterador de la llargada del missatge:
+			MOVH R3,00h
+			MOVL R3,05h
+
+		
+		; Carregar direcció missatge
+			MOVH R4, BYTEALTO DIRECCION msg_end
+			MOVL R4, BYTEBAJO DIRECCION msg_end
+			
+		; Mostrar missatge
+			missatge_final_correcte:
+				; Carregar lletra
+				MOV R5,[R4]
+				; Dibuixar lletra
+				MOV [R1],R5
+				; Incremenetar posició de pantalla i següent lletra:
+				INC R1
+				INC R4
+				; Decrementar Iterador
+				DEC R3
+			BRNZ missatge_final_correcte
+		JMP final
+		; --------------------------- Final Correct END -------------------------
+		
+		
+		
+		; -------------------- Final BAD --------------------------
+		final_bad:
+		; Mostrar missatge final
+		
+		; Recarregar adreça inicial de pantalla
+		MOVL R1, BYTEBAJO PANTALLA
+		MOVH R1, BYTEALTO PANTALLA
+		
+		; Colocar cursor
+			; Posició desitjada
+			MOVH R3,00h
+			MOVL R3,43h
+			; Apliquem posició a registre de la pantalla
+			ADD R1,R1,R3 ; => @Adreça Base pantalla + Posició desitjada
+			
+		; Creem iterador de la llargada del missatge:
+			MOVH R3,00h
+			MOVL R3,03h
+
+		
+		; Carregar direcció missatge
+			MOVH R4, BYTEALTO DIRECCION msg_end_bad
+			MOVL R4, BYTEBAJO DIRECCION msg_end_bad
+			
+		; Mostrar missatge
+			missatge_final_bad:
+				; Carregar lletra
+				MOV R5,[R4]
+				; Dibuixar lletra
+				MOV [R1],R5
+				; Incremenetar posició de pantalla i següent lletra:
+				INC R1
+				INC R4
+				; Decrementar Iterador
+				DEC R3
+			BRNZ missatge_final_bad
+			
+		JMP final
+		; --------------------------- Final BAD END -------------------------
+		
+		
+	final:
+	
+	JMP -1
+	
+FIN 

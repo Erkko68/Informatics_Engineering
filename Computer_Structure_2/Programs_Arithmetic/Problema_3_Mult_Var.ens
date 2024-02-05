@@ -1,0 +1,40 @@
+ORIGEN 200h
+
+INICIO ini
+
+.DATOS
+	var1 valor 14h
+	var2 valor 03h
+	res valor 00h
+
+.CODIGO
+	ini:
+	;Al no requerir de tornar a carregar R0 el reaprofitem multiples vegades
+	
+	MOVL R0, BYTEBAJO DIRECCION var1	; R0 = @VAR1 => @VAR1=0200h => R0= ?? 00h
+	MOVH R0, BYTEALTO DIRECCION var1	; R0 = @VAR1 => @VAR1=0200h => R0= 02 00h
+	
+	MOV R1,[R0]
+	
+	MOVL R0, BYTEBAJO DIRECCION var2	; R1 = @VAR1 => @VAR1=0200h => R0= ?? 01h
+	MOVH R0, BYTEALTO DIRECCION var2	; R1 = @VAR1 => @VAR1=0200h => R0= 02 00h
+	
+	MOV R2,[R0]
+	
+	XOR R0,R0,R0
+	
+	multiplica:
+		ADD R0, R0, R1
+		DEC R2 ; R2=R2-1 => Al arribar a 0 retornara una flag = 0
+		BRNZ multiplica ; si no es zero salta, (BRanch No Zero) FA CAS DE LA ÚLTIMA INSTRUCCIÓ EXECUTADA EN AQUEST CAS DEC
+						; BRZ salta quan sigui zero
+	
+	;Desar resultat
+	
+	MOVL R1, BYTEBAJO DIRECCION res
+	MOVH R1, BYTEALTO DIRECCION res
+	
+	MOV [R1],R0
+	JMP -1
+	
+FIN

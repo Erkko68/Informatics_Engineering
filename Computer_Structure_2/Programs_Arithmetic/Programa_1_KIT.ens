@@ -1,0 +1,33 @@
+const1 EQU 100h
+ORIGEN 200h
+
+INICIO ini
+
+.PILA 10h
+.DATOS
+	V1 VALOR 5
+	
+.CODIGO
+	ini:
+	
+	;ls resgistres de VN son resgistres de 16 bits amb MOVH MOVE HIGH carreguem la part alta del registre,
+	;i MOVL la part baixa MOVE LOW de forma que les dues instruccions quedem com [00h|02h] a R0.
+	
+	MOVH R0, 00h			; R0 = 00h              UUtilitzem la h per definir que es hexadecimal
+	MOVL R0, 02h			; R0 = 00h 02h
+	
+	MOVH R1, 16				; R1 = 10h 			=> 16 = 10h
+	MOVL R1, 20				; R1 = 10h 14h 		=> 20 = 14h
+	
+	MOVH R2, 000000001b		; R2 = 01h			=>
+	MOVL R2, 011111111b		; R2 = 01h FFh		=> 11111111=255=FFh
+	
+	MOVH R3, 'a'			; R3 = 61h			=> ASCII('a')=97d=61h
+							; R3 = 61h ?? valor h indefinit
+	MOV R4,R0				; Copiar valor de R0 a R4 i solament ho pot fer amb registres R4=R0= 00 02
+	
+	ADD R5,R1,R0			; R5 = R1+R0
+	
+	JMP -1					; Instruccio de salt incodicional, fa que retorni a la linea anterior d'aquesta manera amb -1 fa que estigui en bucle infinit. 
+	
+FIN 
